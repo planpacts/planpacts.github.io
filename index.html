@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+<!-- TLDR: Predicate-Action Skills jointly generate what a robot should do and what it expects to make true, enabling learned visuomotor skills to be composed with symbolic planners. -->
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Jointly Learning Predicates and Actions Enables Zero-Shot Skill Composition">
+  <meta name="keywords"
+    content="Pacts, planpacts, predicate action skills, robot instruction following, visual language models, motion planning, task and motion planning, diffusion, learning from demonstration, zero-shot skill composition">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jointly Learning Predicates and Actions Enables Zero-Shot Skill Composition</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D5Q8X3K99Q"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-D5Q8X3K99Q');
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/spotlogo.png">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+
+<body>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+  </nav>
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">Jointly Learning Predicates and Actions Enables Zero-Shot Skill
+              Composition</h1>
+            <div class="is-size-4 publication-authors">
+              <span class="author-block">
+                <a href="https://benedictquartey.github.io/">Benedict Quartey</a>,</span>
+              <span class="author-block">
+                <a href="https://roboticseabass.com/about/">Sebastian Castro</a>,</span>
+              <span class="author-block">
+                <span class="author-block">
+                  <a href="https://eric-rosen.github.io/">Eric Rosen</a>,</span>
+                <span class="author-block">
+                  <span class="author-block">
+                    <a href="https://wbthomason.com/">Wil Thomason</a>,</span>
+                  <span class="author-block">
+                    <a href="https://cs.brown.edu/people/gdk/">George Konidaris</a>,
+                  </span>
+                  <span class="author-block">
+                    <a href="https://cs.brown.edu/people/stellex/">Stefanie Tellex</a>
+                  </span>
+            </div>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">Brown University, Robotics and AI Institute (RAI)</span>
+            </div>
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <!-- PDF Link. -->
+                <!-- <span class="link-block">
+                  <a href="" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                    </span>
+                    <span>Paper</span>
+                  </a>
+                </span> -->
+                <span class="link-block">
+                  <a href="" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                    </span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+                <!-- Video Link. -->
+                <span class="link-block">
+                  <a href="" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-youtube"></i>
+                    </span>
+                    <span>Video</span>
+                  </a>
+                </span>
+                <!-- Tweet Link. -->
+                <span class="link-block">
+                  <a href="" class="external-link button is-normal is-rounded is-dark custom-button-text">
+                    <span class="icon">
+                      <svg class="svg-inline--fa fa-x-twitter" aria-hidden="true" focusable="false" data-prefix="fab"
+                        data-icon="x-twitter" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
+                        data-fa-i2svg="">
+                        <path fill="currentColor"
+                          d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z">
+                        </path>
+                      </svg><!-- <i class="fa-brands fa-x-twitter"></i> Font Awesome fontawesome.com -->
+                    </span>
+                    <span>Tweet</span>
+                  </a>
+                </span>
+
+                <!-- Supplementary Link. -->
+                <!-- <span class="link-block">
+                    <a href="static/assets/supplementary.pdf"
+                      class="external-link button is-normal is-rounded is-dark">
+                      <span class="icon">
+                        <svg class="svg-inline--fa fa-file-image fa-w-12" aria-hidden="true" focusable="false" data-prefix="fa" data-icon="file-image" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" data-fa-i2svg=""><path fill="currentColor" d="M384 121.941V128H256V0h6.059a24 24 0 0 1 16.97 7.029l97.941 97.941a24.002 24.002 0 0 1 7.03 16.971zM248 160c-13.2 0-24-10.8-24-24V0H24C10.745 0 0 10.745 0 24v464c0 13.255 10.745 24 24 24h336c13.255 0 24-10.745 24-24V160H248zm-135.455 16c26.51 0 48 21.49 48 48s-21.49 48-48 48-48-21.49-48-48 21.491-48 48-48zm208 240h-256l.485-48.485L104.545 328c4.686-4.686 11.799-4.201 16.485.485L160.545 368 264.06 264.485c4.686-4.686 12.284-4.686 16.971 0L320.545 304v112z"></path></svg>
+                      </span>
+                      <span>Supplementary</span>
+                    </a>
+                  </span> -->
+                <!-- Code Link. -->
+                <span class="link-block">
+                  <a href=""
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <!-- <span>PACTS Code</span> -->
+                    <span>Coming Soon</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <button type="button" class="button is-small is-rounded is-light layout-toggle"
+                    onclick="toggleVideoLayout(this)">
+                    Wide Videos
+                  </button>
+                </span>
+                <!-- Code Link. -->
+                <!-- <span class="link-block">
+                  <a href=""
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Open Skill Toolkit</span>
+                  </a>
+                </span> -->
+              </div>
+            </div>
+            <blockquote class="subtitle is-5"
+              style="font-style: italic; line-height: 1.35; margin: 1.5rem auto 0; max-width: 720px;">
+              &ldquo;Learned robot skills that predict both actions and their symbolic effects, enabling skill
+              composition via symbolic planning.&rdquo;
+            </blockquote>
+          </div>
+  </section>
+
+  <section class="section" style="margin-top: -5%">
+    <div class="container is-max-desktop">
+      <div class="hero-body">
+        <div class="columns is-centered has-text-centered">
+          <h2 class="title is-3">Abstract</h2>
+        </div>
+        <p class="subtitle has-text-justified" style="font-size: 14px; padding-top: 1%;">
+          Learning from Demonstration (LfD) enables robots
+          to learn complex behaviors from expert examples, yet existing
+          approaches often fail to generalize to new compositions of known
+          skills without retraining. Modern generative policies model distri-
+          butions over action trajectories alone, thus are unable to reason
+          about the symbolic outcomes required for robust composition.
+          We propose that skills should jointly model action trajectories
+          and the symbolic outcomes they induce. To address this gap,
+          we introduce <span style="font-weight: bold;">Predicate-Action Skills (PACTS)</span>, a class of closed-
+          loop visuomotor policies that model skills as a joint generative
+          process over action and predicate belief trajectories, producing
+          coherent action–outcome rollouts within a single model. Jointly
+          generating actions and predicates enables PACTS to learn in-
+          ternal representations that improve both action generation and
+          predicate classification. Furthermore, we demonstrate zero-shot
+          composition of learned skills via planning by leveraging online
+          predicate predictions from PACTS as a symbolic interface for
+          sequencing and monitoring execution
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <section style="margin-top: -7%">
+    <div class="container is-max-desktop">
+      <div class="hero-body">
+        <img id="teaser" src="./static/images/splash.jpeg" alt="Pacts teaser image." class="teaser-image"
+          height="100%" />
+        <h2 class="subtitle has-text-justified" style="font-size: 14px; padding-top: 1%;">
+          <span style="font-weight: bold;">Predicate-Action Skills</span>. Conditioned on current observations
+          $\mathbf{o}$,
+          we model skills as a joint generative process over an action trajectory $\mathbf{x}$ and a predicate-belief
+          trajectory $\mathbf{z}$
+          by learning the coupled distribution $p(\mathbf{x},\mathbf{z}\mid \mathbf{o})$. Starting from noise
+          ($\mathbf{x}_T$,$\mathbf{z}_T$),
+          our model iteratively refines both modalities to produce temporally coherent action–outcome rollouts
+          $(\mathbf{x}_0,\mathbf{z}_0)$.
+          The resulting predicate-belief trajectory $\mathbf{z}_0$ provides an online symbolic interface for monitoring
+          skill execution and
+          planning-based skill composition using off-the-shelf planners.
+        </h2>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="container is-max-desktop">
+      <div class="column has-text-centered">
+        <p class="title is-3">Explainer Video<br><span class="title is-5"></p>
+        <div id="videoContainer2"
+          style="margin-top: 20px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+          <iframe id="videoPlayer2" src="https://www.youtube.com/embed/JWkTad7OjwU?si=dKMcQQFjgU4J_isv"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 15px;" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
+          </iframe>
+        </div>
+      </div>
+
+      <div class="column has-text-centered" style="margin-top: 30px;">
+        <p class="title is-3">Online Action and Predicate Prediction<br><span class="title is-5">(Simulation
+            Environments)</span></p>
+        <p class="subtitle has-text-justified" style="font-size: 14px; padding-top:1%">
+          We evaluate PACTS in simulated manipulation environments where the policy executes actions while
+          simultaneously predicting predicate beliefs online. Each video visualizes the learned policy rollout together
+          with predicted symbolic conditions and simulator ground truth. These rollouts visualize the alignement between
+          generated
+          predicate-belief trace and the outcomes induced by the robot’s own actions.
+        </p>
+      </div>
+    </div>
+    <br>
+
+    <div class="container is-max-desktop video-layout">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <div class="content">
+            <h3 class="title is-5">PushBarrier</h3>
+          </div>
+          <div class="content has-text-centered">
+            <div class="publication-video">
+              <video id="replay-video" autoplay controls muted preload loop playsinline width="100%">
+                <source src="./static/videos/pushbarrier.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="column has-text-centered">
+          <div class="content">
+            <h3 class="title is-5">Kitchen</h3>
+          </div>
+          <div class="content has-text-centered">
+            <div class="publication-video">
+              <video id="replay-video" autoplay controls muted preload loop playsinline width="100%">
+                <source src="./static/videos/kitchen.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </div>
+
+        <div class="column has-text-centered">
+          <div class="content">
+            <h3 class="title is-5">Coffee Preparation</h3>
+          </div>
+          <div class="content has-text-centered">
+            <div class="publication-video">
+              <video id="replay-video" autoplay controls muted preload loop playsinline width="100%">
+                <source src="./static/videos/coffee.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="container" style="padding-top: 3%;">
+    <div class="container is-max-desktop">
+      <div class="column has-text-centered">
+        <p class="title is-3">From Monolithic Demonstrations to Composable Skills<br><span
+            class="title is-5">(Real-world Environment)</span></p>
+        <p class="subtitle has-text-justified" style="font-size: 14px; padding-top:1%">
+          To train PACTS in the real world, we built an annotation and skill-segmentation toolkit that converts
+          long-horizon demonstrations into skill-centric datasets. Users sparsely annotate keyframes where predicates
+          change, such as when a cube enters the container. The toolkit propagates those labels into dense per-timestep
+          predicate traces and aligns them with the action stream.
+
+          The result is a dataset of paired action and predicate label trajectories for each skill, ready
+          for joint action–outcome learning.
+        </p>
+      </div>
+    </div>
+    <br>
+    <div class="container is-max-desktop video-layout">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+
+          <div class="content has-text-centered">
+            <div class="publication-video">
+              <video id="replay-video" autoplay controls muted preload loop playsinline width="100%">
+                <source src="./static/videos/demonstration.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+          <div class="content">
+            <h3 class="title is-5">1. Long-horizon Task Demonstration</h3>
+          </div>
+        </div>
+
+
+        <div class="column has-text-centered">
+
+          <div class="content has-text-centered">
+            <div class="publication-video">
+              <video id="replay-video" autoplay controls muted preload loop playsinline width="100%">
+                <source src="./static/videos/annotation.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+          <div class="content">
+            <h3 class="title is-5">2. Keyframe-level Predicate Annotation</h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="content has-text-centered" style="margin-top: 2rem;">
+        <select id="skillVideoSelector" onchange="loadVideo(this, 'skillVideoPlayer', 'skillVideoSource')"
+          style="display: block; margin: 0 auto 1rem; max-width: 420px;">
+          <option value="" disabled selected>Select a Skill</option>
+          <option value="./static/videos/pack_red.mp4">Put Red Cube in Container</option>
+          <option value="./static/videos/pack_yellow.mp4">Put Yellow Cube in Container </option>
+          <option value="./static/videos/pack_blue.mp4">Put Blue Cube in Container </option>
+          <option value="./static/videos/pack_green.mp4">Put Green Cube in Container </option>
+        </select>
+        <div class="publication-video">
+            <video id="skillVideoPlayer" autoplay controls muted preload loop playsinline width="100%"
+              style="border-radius: 15px;">
+              <source id="skillVideoSource" src="./static/videos/pack_red.mp4" type="video/mp4">
+            </video>
+        </div>
+        <h3 class="title is-5 is-spaced" style="margin-top: 1.25rem; margin-bottom: 0.25rem;">3. Generated Skill-Centric Dataset</h3>
+
+
+      </div>
+    </div>
+  </div>
+
+
+  <div class="container" style="padding-top: 3%;">
+    <div class="container is-max-desktop">
+      <div class="column has-text-centered">
+        <p class="title is-3">Planning with Learned Predicate-Action Skills<br><span class="title is-5">(Real-world
+            Environment)</span></p>
+        <p class="subtitle has-text-justified" style="font-size: 14px; padding-top:1%">
+          PACTS exposes learned skills through predicate beliefs, allowing an off-the-shelf symbolic planner to sequence
+          skills for new goals. Given a symbolic goal, the planner selects a sequence of learned skills. During
+          execution, PACTS predicts whether each skill’s expected effects have been achieved, allowing the system to
+          advance, monitor progress, or replan when needed.
+        </p>
+        <select id="planningVideoSelector" onchange="loadVideo(this, 'planningVideoPlayer', 'planningVideoSource')">
+          <!-- <option value="" disabled selected>Select a video</option> -->
+          <option value="./static/videos/pack_blue_yellow_task.mp4">Goal: Blue & Yellow Cubes in Container
+          </option>
+          <option value="./static/videos/pack_red_only_task.mp4">Goal: Red Cube in Container </option>
+        </select>
+
+        <!-- Video player -->
+        <div id="videoContainer" style="margin-top: 20px;">
+          <video id="planningVideoPlayer" autoplay controls muted preload loop playsinline width="100%"
+            style="border-radius: 15px;">
+            <source id="planningVideoSource" src="./static/videos/pack_blue_yellow_task.mp4" type="video/mp4">
+          </video>
+        </div>
+        <br>
+        <p>In this real-world cube-packing task, demonstrations contain the full behavior of packing all cubes. PACTS
+          learns individual packing skills from segmented demonstrations and recomposes them at test time using symbolic
+          goals. The same learned skill library can be recomposed into new symbolic goals without retraining.</p>
+      </div>
+
+    </div>
+  </div>
+
+<!-- 
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <div class="column has-text-centered">
+        <h2 class="title">BibTeX</h2>
+      </div>
+      <pre><code>
+        @inproceedings{quartey2025verifiably,
+        title={Verifiably following complex robot instructions with foundation models},
+        author={Quartey, Benedict and Rosen, Eric and Tellex, Stefanie and Konidaris, George},
+        booktitle={2025 IEEE International Conference on Robotics and Automation (ICRA)},
+        pages={1--8},
+        year={2025},
+        organization={IEEE}}
+      </code></pre>
+    </div>
+    <div class="container is-max-desktop">
+      <p> Special thanks to <a href="https://nerfies.github.io/">Nerfies</a> for an awesome website template!</p>
+    </div>
+  </section> -->
+
+  <br>
+  <br>
+
+</body>
+
+<script>
+  function loadVideo(videoSelector, videoPlayerId, videoSourceId) {
+    var videoPlayer = document.getElementById(videoPlayerId);
+    var videoSource = document.getElementById(videoSourceId);
+
+    videoSource.src = videoSelector.value;
+    videoPlayer.load();
+    videoPlayer.play();
+  }
+
+  function toggleVideoLayout(toggleButton) {
+    var videoLayouts = document.querySelectorAll('.video-layout');
+    var useWideLayout = toggleButton.textContent.trim() === 'Wide Videos';
+
+    videoLayouts.forEach(function (layout) {
+      layout.classList.toggle('is-max-desktop', !useWideLayout);
+    });
+
+    toggleButton.textContent = useWideLayout ? 'Compact Videos' : 'Wide Videos';
+  }
+</script>
+
+</html>
